@@ -4,7 +4,6 @@ This script demonstrates how to do real-time object detection with
 TensorRT optimized YOLO engine.
 """
 
-
 import os
 import time
 import argparse
@@ -16,11 +15,9 @@ from utils.yolo_classes import get_cls_dict
 from utils.camera import add_camera_args, Camera
 from utils.display import open_window, set_display, show_fps
 from utils.visualization import BBoxVisualization
+from utils.yolo import TRT_YOLO
 
-from utils.yolo_with_plugins import TrtYOLO
-
-
-WINDOW_NAME = 'TrtYOLODemo'
+WINDOW_NAME = 'Face_detection'
 
 
 def parse_args():
@@ -31,13 +28,13 @@ def parse_args():
     parser = argparse.ArgumentParser(description=desc)
     parser = add_camera_args(parser)
     parser.add_argument(
-        '-c', '--category_num', type=int, default=80,
-        help='number of object categories [80]')
+        '-c', '--category_num', type=int, default=1,
+        help='number of object categories [1]')
     parser.add_argument(
         '-m', '--model', type=str, required=True,
-        help=('[yolov3|yolov3-tiny|yolov3-spp|yolov4|yolov4-tiny]-'
+        help=('[yolov4|yolov4-tiny]-'
               '[{dimension}], where dimension could be a single '
-              'number (e.g. 288, 416, 608) or WxH (e.g. 416x256)'))
+              'number (e.g. 288, 416, 608)'))
     args = parser.parse_args()
     return args
 
@@ -100,7 +97,7 @@ def main():
     if h % 32 != 0 or w % 32 != 0:
         raise SystemExit('ERROR: bad yolo_dim (%s)!' % yolo_dim)
 
-    trt_yolo = TrtYOLO(args.model, (h, w), args.category_num)
+    trt_yolo = TRT_YOLO(args.model, (h, w), args.category_num)
 
     open_window(
         WINDOW_NAME, 'Camera TensorRT YOLO Demo',

@@ -12,6 +12,7 @@ import tensorrt as trt
 try:
     ctypes.cdll.LoadLibrary('../plugins/libyolo_layer.so')
 except OSError as e:
+    print(e)
     raise SystemExit('ERROR: failed to load ../plugins/libyolo_layer.so.  '
                      'Did you forget to do a "make" in the "../plugins/" '
                      'subdirectory?') from e
@@ -48,9 +49,8 @@ def get_yolo_whs(model_name, w, h):
         raise ValueError('ERROR: unknown model (%s)!' % args.model)
 
 
-def verify_classes(model_name, num_classes):
+def verify_classes(cfg_file_path, num_classes):
     """Verify 'classes=??' in cfg matches user-specified num_classes."""
-    cfg_file_path = model_name + '.cfg'
     with open(cfg_file_path, 'r') as f:
         cfg_lines = f.readlines()
     classes_lines = [l.strip() for l in cfg_lines if l.startswith('classes')]
@@ -58,9 +58,8 @@ def verify_classes(model_name, num_classes):
     return all([c == num_classes for c in classes])
 
 
-def get_anchors(model_name):
+def get_anchors(cfg_file_path):
     """Get anchors of all yolo layers from the cfg file."""
-    cfg_file_path = model_name + '.cfg'
     with open(cfg_file_path, 'r') as f:
         cfg_lines = f.readlines()
     yolo_lines = [l.strip() for l in cfg_lines if l.startswith('[yolo]')]
@@ -81,9 +80,8 @@ def get_anchors(model_name):
     return anchors
 
 
-def get_scales(model_name):
+def get_scales(cfg_file_path):
     """Get scale_x_y's of all yolo layers from the cfg file."""
-    cfg_file_path = model_name + '.cfg'
     with open(cfg_file_path, 'r') as f:
         cfg_lines = f.readlines()
     yolo_lines = [l.strip() for l in cfg_lines if l.startswith('[yolo]')]
@@ -105,20 +103,20 @@ def get_plugin_creator(plugin_name, logger):
     return None
 
 
-def add_yolo_plugins(network, model_name, num_classes, logger):
+def add_yolo_plugins(network, model_name, cfg_path, num_classes, logger, size):
     """Add yolo plugins into a TensorRT network."""
-    input_width, input_height = get_input_wh(model_name)
+    input_width, input_height = size, size
     yolo_whs = get_yolo_whs(model_name, input_width, input_height)
-    if not verify_classes(model_name, num_classes):
+    if not verify_classes(cfg_path, num_classes):
         raise ValueError('bad num_classes (%d)' % num_classes)
-    anchors = get_anchors(model_name)
+    anchors = get_anchors(cfg_path)
     if len(anchors) != len(yolo_whs):
         raise ValueError('bad number of yolo layers: %d vs. %d' %
                          (len(anchors), len(yolo_whs)))
     if network.num_outputs != len(anchors):
         raise ValueError('bad number of network outputs: %d vs. %d' %
                          (network.num_outputs, len(anchors)))
-    scales = get_scales(model_name)
+    scales = get_scales(cfg_path)
     if any([s < 1.0 for s in scales]):
         raise ValueError('bad scale_x_y: %s' % str(scales))
 

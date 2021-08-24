@@ -1,2 +1,3 @@
 plugins/*.o
 plugins/*.so
+__pycache__

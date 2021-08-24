@@ -58,13 +58,12 @@ import tensorrt as trt
 
 from plugins import get_input_wh, add_yolo_plugins
 
-
 MAX_BATCH_SIZE = 1
 
 
 def load_onnx(model_name):
     """Read the ONNX file."""
-    onnx_path = '%s.onnx' % model_name
+    onnx_path = model_name
     if not os.path.isfile(onnx_path):
         print('ERROR: file (%s) not found!  You might want to run yolo_to_onnx.py first to generate it.' % onnx_path)
         return None
@@ -86,10 +85,10 @@ def set_net_batch(network, batch_size):
     return network
 
 
-def build_engine(model_name, category_num, do_int8, dla_core, verbose=False):
+def build_engine(model_name, category_num, do_int8, dla_core, size, cfg_path, verbose=False):
     """Build a TensorRT engine from ONNX using the older API."""
-    net_w, net_h = get_input_wh(model_name)
-
+    # net_w, net_h = get_input_wh(model_name)
+    net_w, net_h = size, size
     print('Loading the ONNX file...')
     onnx_data = load_onnx(model_name)
     if onnx_data is None:
@@ -110,7 +109,7 @@ def build_engine(model_name, category_num, do_int8, dla_core, verbose=False):
 
         print('Adding yolo_layer plugins...')
         network = add_yolo_plugins(
-            network, model_name, category_num, TRT_LOGGER)
+            network, model_name, cfg_path, category_num, TRT_LOGGER, size)
 
         print('Building an engine.  This would take a while...')
         print('(Use "--verbose" or "-v" to enable verbose logging.)')
@@ -162,7 +161,7 @@ def main():
     """Create a TensorRT engine for ONNX-based YOLO."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-v', '--verbose', action='store_true',
+        '-v', '--verbose', action='store_false',
         help='enable verbose output (for debugging)')
     parser.add_argument(
         '-c', '--category_num', type=int, default=80,
@@ -178,14 +177,23 @@ def main():
     parser.add_argument(
         '--dla_core', type=int, default=-1,
         help='id of DLA core for inference (0 ~ N-1)')
+    parser.add_argument(
+        '--size', type=int, required=True,
+        help='size')
+    parser.add_argument(
+        '--cfg', type=str, required=True,
+        help=('cfg path'), dest="cfg")
+    parser.add_argument(
+        '--out', type=str, required=True,
+        help=('out path'), dest="out")
     args = parser.parse_args()
 
     engine = build_engine(
-        args.model, args.category_num, args.int8, args.dla_core, args.verbose)
+        args.model, args.category_num, args.int8, args.dla_core, args.size, args.cfg, args.verbose)
     if engine is None:
         raise SystemExit('ERROR: failed to build the TensorRT engine!')
 
-    engine_path = '%s.trt' % args.model
+    engine_path = args.out
     with open(engine_path, 'wb') as f:
         f.write(engine.serialize())
     print('Serialized the TensorRT engine to file: %s' % engine_path)

@@ -864,19 +864,28 @@ def main():
         help=('[yolov3|yolov3-tiny|yolov3-spp|yolov4|yolov4-tiny]-'
               '[{dimension}], where dimension could be a single '
               'number (e.g. 288, 416, 608) or WxH (e.g. 416x256)'))
+    parser.add_argument(
+        '--cfg', type=str, required=True,
+        help=('cfg path'), dest="cfg")
+    parser.add_argument(
+        '--weights', type=str, required=True,
+        help=('weights path'), dest="weights")
+    parser.add_argument(
+        '--out', type=str, required=True,
+        help=('out path'), dest="out")
     args = parser.parse_args()
     if args.category_num <= 0:
         raise SystemExit('ERROR: bad category_num (%d)!' % args.category_num)
 
-    cfg_file_path = '%s.cfg' % args.model
+    cfg_file_path = args.cfg
     if not os.path.isfile(cfg_file_path):
         raise SystemExit('ERROR: file (%s) not found!' % cfg_file_path)
-    weights_file_path = '%s.weights' % args.model
+    weights_file_path = args.weights
     if not os.path.isfile(weights_file_path):
         raise SystemExit('ERROR: file (%s) not found!' % weights_file_path)
-    output_file_path = '%s.onnx' % args.model
+    output_file_path = args.out
 
-    if not verify_classes(args.model, args.category_num):
+    if not verify_classes(cfg_file_path, args.category_num):
         raise SystemExit('ERROR: bad category_num (%d)' % args.category_num)
 
     # Derive yolo input width/height from model name.
@@ -916,6 +925,7 @@ def main():
             output_tensor_dims['106_convolutional'] = [c, h //  8, w //  8]
     elif 'yolov4' in args.model:
         if 'tiny' in args.model:
+            print([c, h // 32, w // 32])
             output_tensor_dims['030_convolutional'] = [c, h // 32, w // 32]
             output_tensor_dims['037_convolutional'] = [c, h // 16, w // 16]
         else:

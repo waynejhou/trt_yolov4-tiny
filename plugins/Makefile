@@ -27,12 +27,12 @@ NVCCFLAGS=-m64 -gencode arch=compute_$(compute),code=sm_$(compute) \
                -gencode arch=compute_$(compute),code=compute_$(compute)
 
 # These are the directories where I installed TensorRT on my x86_64 PC.
-TENSORRT_INCS=-I"/usr/local/TensorRT-7.1.3.4/include"
-TENSORRT_LIBS=-L"/usr/local/TensorRT-7.1.3.4/lib"
+#TENSORRT_INCS=-I"/usr/local/TensorRT-7.1.3.4/include"
+#TENSORRT_LIBS=-L"/usr/local/TensorRT-7.1.3.4/lib"
 
 # INCS and LIBS
-INCS=`pkg-config cudart-11.1 --cflags` -I"plugin"
-LIBS=-L/usr/local/cuda-11.1/targets/x86_64-linux/lib  -Wl,--start-group -lcudart -lnvinfer -lnvparsers -lnvinfer_plugin -lcudnn -lcublas -lcudart_static -lnvToolsExt -lrt -ldl -lpthread -Wl,--end-group
+INCS=`pkg-config cudart-10.2 --cflags` -I"plugin"
+LIBS=-Wl,--start-group `pkg-config cudart-10.2 --libs` -lcudart -lnvinfer -lnvparsers -lnvinfer_plugin -lcudnn -lcublas -lcudart_static -lnvToolsExt -lrt -ldl -lpthread -Wl,--end-group
 #INCS=-I"/usr/local/cuda/include" $(TENSORRT_INCS) -I"/usr/local/include" -I"plugin"
 #LIBS=-L"/usr/local/cuda/lib64" $(TENSORRT_LIBS) -L"/usr/local/lib" -Wl,--start-group -lnvinfer -lnvparsers -lnvinfer_plugin -lcudnn -lcublas -lcudart_static -lnvToolsExt -lcudart -lrt -ldl -lpthread -Wl,--end-group
 

@@ -7,7 +7,7 @@ I referenced the code from https://github.com/dongfangduoshou123/YoloV3-TensorRT
 import ctypes
 
 import numpy as np
-import tensorrt as trt
+# import tensorrt as trt
 
 try:
     ctypes.cdll.LoadLibrary('../plugins/libyolo_layer.so')

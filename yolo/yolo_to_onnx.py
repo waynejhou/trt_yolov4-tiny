@@ -162,11 +162,16 @@ class DarkNetParser(object):
         param_line = param_line.replace(' ', '')
         param_type, param_value_raw = param_line.split('=')
         param_value = None
-        if param_type == 'layers':
-            layer_indexes = list()
+        if param_type in ['layers', 'steps'] :
+            intVals = list()
             for index in param_value_raw.split(','):
-                layer_indexes.append(int(index))
-            param_value = layer_indexes
+                intVals.append(int(index))
+            param_value = intVals
+        elif param_type in ['scales'] :
+            floatVals = list()
+            for index in param_value_raw.split(','):
+                floatVals.append(float(index))
+            param_value = floatVals
         elif isinstance(param_value_raw, str) and not param_value_raw.isalpha():
             condition_param_value_positive = param_value_raw.isdigit()
             condition_param_value_negative = param_value_raw[0] == '-' and \
